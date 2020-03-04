@@ -1,0 +1,97 @@
+* suspend and poweroff events
+  the following is my ~/etc/systemd/logind.conf~
+  #+BEGIN_SRC conf
+    [Login]
+    HandlePowerKey=suspend
+    HandleSuspendKey=poweroff
+    HandleLidSwitch=suspend
+    HandleLidSwitchDocked=ignore
+  #+END_SRC
+  i have swapped the suspend and power keys because, on my laptop, ~poweroff~
+  has its own key above the backspace (which i frequently hit on accident),
+  whereas ~suspend~ is ~<fn>-<esc>~, which is easy to hit on purpose but hard
+  to hit on accident.
+
+  these are supposedly the default settings for ~HandleLidSwitch~ and
+  ~HandleLidSwitchDocked~, but until i set them, my laptop was not suspending
+  when i closed the lid.
+* screensaver
+  i set stumpwm to run ~screensaver~ on startup.
+* lightdm no sound
+  i created a file
+  [[file:/usr/share/glib-2.0/schemas/50_unity-greeter.gschema.override][/usr/share/glib-2.0/schemas/50_unity-greeter.gschema.override]]
+  with the following contents:
+  #+BEGIN_SRC conf
+    [com.canonical.unity-greeter]
+    play-ready-sound = false
+  #+END_SRC
+  the available fields and defaults are in
+  [[file:/usr/share/glib-2.0/schemas/com.canonical.unity-greeter.gschema.xml]]
+* making arm64 chroot
+  #+BEGIN_SRC sh
+    sudo mkdir /arm64
+    sudo debootstrap --arch=arm64 stable /arm64
+  #+END_SRC
+* building sbcl in chroot
+  #+BEGIN_SRC sh
+    sudo chroot /arm64 sh -c 'cd /opt/sbcl-src ; sh make.sh --arch=arm64 --prefix=/opt/sbcl64'
+  #+END_SRC
+  install it in the chroot with:
+  #+BEGIN_SRC sh
+    sudo chroot /arm64 sh -c 'cd /opt/sbcl-src ; sh install.sh'
+  #+END_SRC
+  install it globally the normal way:
+  #+BEGIN_SRC sh
+    sudo sh install.sh
+  #+END_SRC
+  make sure it's symlinked with
+  #+BEGIN_SRC sh
+    sudo ln -s /opt/sbcl64/bin/sbcl /usr/local/bin/sbcl64
+  #+END_SRC
+  additionally, symlink it as ~sbcl~ with:
+  #+BEGIN_SRC sh
+    sudo ln -s /usr/local/bin/sbcl64 /usr/local/bin/sbcl
+  #+END_SRC
+* building sbcl32
+  #+BEGIN_SRC sh
+    sh make.sh --arch=arm --prefix=/opt/sbcl32
+  #+END_SRC
+  make sure it's symlinked with
+  #+BEGIN_SRC sh
+    sudo ln -s /opt/sbcl32/bin/sbcl /usr/local/bin/sbcl32
+  #+END_SRC
+* font
+  [[https://input.fontbureau.com/download/?customize&fontSelection=whole&a=0&g=0&i=serifs&l=serifs_round&zero=0&asterisk=0&braces=0&preset=default&line-height=1.2&accept=I+do&email=][download input]].
+  #+BEGIN_SRC sh
+    unzip Input_Font.zip
+  #+END_SRC
+  install:
+  #+BEGIN_SRC sh
+    for font in $(ls -d Input_Font/*/*/); do
+        cp $font ~/.fonts/
+    done
+    fc-cache -v -f
+  #+END_SRC
+* disable wifi powersave
+  to see the power save setting, do:
+  #+BEGIN_SRC sh
+    iw dev wlan0 get power_save
+  #+END_SRC
+** temporarily disable
+   to disable it temporarily, do:
+   #+BEGIN_SRC sh
+    iw dev wlan0 set power_save off
+   #+END_SRC
+** permanently disable - networkmanager conf.d
+   as root, delete
+   [[file:/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf]] and replace it
+   with [[file:/etc/NetworkManager/conf.d/default-wifi-powersave-off.conf]] with the
+   contents:
+   #+BEGIN_SRC conf
+    [connection]
+    wifi.powersave = 2
+   #+END_SRC
+** permanently disable - power.d
+   #+BEGIN_SRC sh
+     sudo touch /etc/pm/power.d/wireless
+   #+END_SRC
