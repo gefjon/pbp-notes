@@ -15,8 +15,6 @@
   these are supposedly the default settings for ~HandleLidSwitch~ and
   ~HandleLidSwitchDocked~, but until i set them, my laptop was not suspending
   when i closed the lid.
-* screensaver
-  i set stumpwm to run ~screensaver~ on startup.
 * lightdm no sound
   i created a file
   [[file:/usr/share/glib-2.0/schemas/50_unity-greeter.gschema.override][/usr/share/glib-2.0/schemas/50_unity-greeter.gschema.override]]
@@ -94,4 +92,108 @@
 ** permanently disable - power.d
    #+BEGIN_SRC sh
      sudo touch /etc/pm/power.d/wireless
+   #+END_SRC
+* touchpad
+  touchpad configuration goes in [[file:/etc/X11/xorg.conf.d/30-touchpad.conf]]. 
+
+  all told, mine looks like:
+  #+BEGIN_SRC conf
+    Section "InputClass"
+        Identifier "touchpad"
+        Driver "libinput"
+        MatchIsTouchpad "on"
+        Option "Tapping" "off"
+        Option "TransformationMatrix" "4.0 0.0 0.0 0.0 4.0 0.0 0.0 0.0 1.0"
+    EndSection
+  #+END_SRC
+
+  the options i've added or changed are:
+** disable tapping
+   tapping with this touchpad makes typing hard. it's too sensitive.
+   #+BEGIN_SRC conf
+     Option "Tapping" "off"
+   #+END_SRC
+** raise mouse speed
+   the transformation matrix is a 3x3 matrix. by default, it's an identity
+   matrix. ~0, 0~ seems to be the x speed, and ~1, 1~ the y speed. i've ramped
+   each of those up to 4x. note that, for reasons beyond my comprehension,
+   these are divided by ~2, 2~, so setting that to ~4.0~ rather than ~1.0~
+   would return the mouse speed to the default.
+
+   #+BEGIN_SRC conf
+     Option "TransformationMatrix" "4.0 0.0 0.0 0.0 4.0 0.0 0.0 0.0 1.0"
+   #+END_SRC
+* keyboard layout
+  i have an iso pinebook, but i still want it configured in software to use the
+  us keyboard layout. the manjaro installer doesn't offer that as an option, so
+  i have to edit [[file:/etc/X11/xorg.conf.d/00-keyboard.conf]] to contain:
+  #+BEGIN_SRC conf
+            Option "XkbLayout" "us"
+            Option "XkbModel" "pc105"
+  #+END_SRC
+  all told, the contents of that file are:
+  #+BEGIN_SRC conf
+    Section "InputClass"
+            Identifier "system-keyboard"
+            MatchIsKeyboard "on"
+            Option "XkbLayout" "us"
+            Option "XkbModel" "pc105"
+            Option "XkbOptions" "terminate:ctrl_alt_bksp"
+    EndSection
+  #+END_SRC
+* theme
+** cursors
+   i use the cursors from Chicago95. to install these, clone Chicago95, and
+   copy the cursors into [[file:/usr/share/icons/]]:
+   #+BEGIN_SRC sh
+     hub clone grassmunk/Chicago95 ~/Chicago95
+     sudo cp -r ~/Chicago95/Cursors/* /usr/share/icons/
+   #+END_SRC
+   then, make them the default by editing both
+   [[file:/usr/share/icons/default/index.theme]] and [[file:~/.icons/default/index.theme]] to contain:
+   #+BEGIN_SRC conf
+     [Icon Theme]
+     Inherits=Chicago95_Cursor_Black
+   #+END_SRC
+   and enable them in gtk by chainging [[file:~/.config/gtk-3.0/settings.ini]] to
+   contain:
+   #+BEGIN_SRC conf
+     [Settings]
+     gtk-cursor-theme-name=Chicago95_Cursor_Black
+   #+END_SRC
+   enable in LightDM by editing [[file:/etc/lightdm/lightdm-gtk-greeter.conf]] to
+   contain:
+   #+BEGIN_SRC conf
+     [greeter]
+     cursor-theme-name = Chicago95_Cursor_Black
+   #+END_SRC
+** lightdm background color
+   edit [[file:/etc/lightdm/lightdm-gtk-greeter.conf]] to contain:
+   #+BEGIN_SRC conf
+     background = #282a36
+   #+END_SRC
+** colors
+   in keeping with my love of dracula, i use the gtk theme
+   [[https://github.com/EliverLara/Ant-Dracula]]. clone it:
+   #+BEGIN_SRC sh
+     hub clone EliverLara/Ant-Dracula ~/Ant-Dracula
+   #+END_SRC
+   then, install it:
+   #+BEGIN_SRC sh
+     sudo cp -r ~/Ant-Dracula /usr/share/themes/
+   #+END_SRC
+   set this as the lightdm theme by editing
+   [[file:/etc/lightdm/lightdm-gtk-greeter.conf]] to contain:
+   #+BEGIN_SRC conf
+     theme-name = Ant-Dracula
+   #+END_SRC
+** icons
+   my window manager doesn't have any icons, but i have lightdm configured to
+   use the Chicago95 icons. install them:
+   #+BEGIN_SRC sh
+     sudo cp -r ~/Chicago95/Icons/* /usr/share/icons/
+   #+END_SRC
+   edit [[file:/etc/lightdm/lightdm-gtk-greeter.conf]] to contain:
+   #+BEGIN_SRC conf
+     icon-theme-name = Chicago95
    #+END_SRC
