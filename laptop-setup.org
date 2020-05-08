@@ -197,3 +197,31 @@
    #+BEGIN_SRC conf
      icon-theme-name = Chicago95
    #+END_SRC
+* zsh
+  install zsh with
+  #+BEGIN_SRC sh
+    sudo pacman -Syu zsh
+  #+END_SRC
+  then, get oh-my-zsh with
+  #+BEGIN_SRC sh
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  #+END_SRC
+** theme
+   next, get the dracula theme:
+   #+BEGIN_SRC sh
+     git clone https://github.com/dracula/zsh.git ~/zsh-theme-dracula
+     ln -s ~/zsh-theme-dracula/dracula.zsh-theme ~/.oh-my-zsh/themes/dracula.zsh-theme
+   #+END_SRC
+   change [[file:~/.zshrc][.zshrc]] to include:
+   #+BEGIN_SRC sh
+     ZSH_THEME="dracula"
+   #+END_SRC
+** autocomplete
+   clone the zsh-autosuggestions repo:
+   #+BEGIN_SRC sh
+     git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+   #+END_SRC
+   and add it to your [[file:~/.zshrc][.zshrc]]:
+   #+BEGIN_SRC sh
+     plugins=(.. zsh-autosuggestions)
+   #+END_SRC
